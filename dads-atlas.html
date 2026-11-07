@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Dad’s Atlas</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#e8ebde;--card:#f6f6ec;--ink:#14263a;--mut:#56677a;--acc:#1f5f6b;--gold:#a87a1c;--line:#c5cbb4;--on:#fff;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1824;--card:#16253a;--ink:#e9eadb;--mut:#9aabbd;--acc:#6fb7c2;--gold:#d9ad4f;--line:#2b3d55;--on:#0e1824;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0e1824;--card:#16253a;--ink:#e9eadb;--mut:#9aabbd;--acc:#6fb7c2;--gold:#d9ad4f;--line:#2b3d55;--on:#0e1824;color-scheme:dark}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.6 Georgia,"Times New Roman",serif;padding-bottom:92px;-webkit-text-size-adjust:100%}
+main{max-width:640px;margin:0 auto;padding:20px 18px}
+h1,h2,h3{font-family:Fraunces,Georgia,serif;line-height:1.15;margin:0}
+h1{font-size:2.5rem;font-weight:700;letter-spacing:-.01em}
+h2{font-size:1.6rem;margin-bottom:12px}
+h3{font-size:1.2rem}
+p{margin:0 0 12px}
+.mut{color:var(--mut)}
+button{font:inherit;cursor:pointer;color:inherit}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.hero{padding:18px 0 22px;border-bottom:2px solid var(--ink);margin-bottom:22px}
+.hero p{margin:8px 0 0;font-size:1.1rem}
+.fact{border:2px dashed var(--acc);border-radius:6px;padding:16px 18px;background:var(--card);margin-bottom:20px}
+.fact b{font-family:Fraunces,Georgia,serif;color:var(--acc);font-size:1.15rem;display:block;margin-bottom:4px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:14px}
+.row{display:flex;gap:10px;align-items:center;justify-content:space-between}
+.tap{width:100%;text-align:left;display:block}
+.btn{background:var(--acc);color:var(--on);border:0;border-radius:8px;padding:12px 18px;font-weight:700;min-height:48px}
+.btn.alt{background:transparent;color:var(--ink);border:1.5px solid var(--ink)}
+.btn.warn{background:transparent;color:var(--mut);border:1px solid var(--line)}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:4px 0 12px}
+.chip{border:1.5px solid var(--line);background:var(--card);border-radius:99px;padding:8px 16px;white-space:nowrap;min-height:44px}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+input,select,textarea{width:100%;font:inherit;padding:12px;border:1.5px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);margin:4px 0 14px}
+label{font-weight:700;font-size:.95rem}
+.tag{display:inline-block;font-size:.85rem;color:var(--acc);border:1px solid var(--acc);border-radius:99px;padding:0 10px;margin-right:6px}
+.story{border-left:4px solid var(--gold);padding-left:14px;font-style:italic;margin:14px 0}
+.ing{list-style:none;padding:0;margin:0 0 20px}
+.ing li{padding:10px 4px;border-bottom:1px solid var(--line);cursor:pointer}
+.ing li.done{text-decoration:line-through;color:var(--mut)}
+.steps{padding-left:24px;margin:0 0 20px}
+.steps li{margin-bottom:14px}
+.cook{font-size:1.35rem;line-height:1.55}
+.cook h2{font-size:2rem}
+.soon{text-align:center;padding:40px 18px}
+.soon .big{font-size:3rem}
+nav{position:fixed;left:0;right:0;bottom:0;display:flex;background:var(--card);border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom,0px))}
+nav button{flex:1;background:none;border:0;padding:6px 0;font-size:.78rem;color:var(--mut);min-height:52px;display:flex;flex-direction:column;align-items:center;gap:2px}
+nav button span{font-size:1.4rem;line-height:1}
+nav button[aria-current="page"]{color:var(--acc);font-weight:700}
+</style>
+</head>
+<body>
+<main id="view"></main>
+<nav id="nav" aria-label="Main"></nav>
+<script>
+var NAME = "Dad";
+var TABS = [["home","🏠","Home"],["kitchen","🍳","Kitchen"],["games","🧩","Games"],["explore","🧭","Explore"],["family","💌","Family"]];
+var FACTS = [
+ ["Art","The Mona Lisa was stolen from the Louvre in 1911 and came back to Paris in 1914."],
+ ["Geography","Russia stretches across eleven time zones, more than any other country."],
+ ["History","The Rosetta Stone, found in 1799, helped Champollion decipher Egyptian hieroglyphs in 1822."],
+ ["Travel","Venice is built across more than a hundred small islands, linked by bridges."],
+ ["Cooking","The medieval spice trade pushed European sailors to search for sea routes to Asia."],
+ ["Art","Vincent van Gogh sold very few paintings while he was alive."],
+ ["Geography","Istanbul is the only major city that sits on two continents, Europe and Asia."]
+];
+var SEED = [
+ {id:"s1",title:"Shakshuka",cat:"Mains",time:"30 min",story:"Sample recipe. Replace the story with where this dish comes from in our family.",
+  ing:["2 tbsp olive oil","1 onion, diced","1 red pepper, sliced","3 garlic cloves, chopped","1 tsp cumin","1 tsp paprika","1 can (400 g) crushed tomatoes","4 to 5 eggs","Salt, pepper, fresh parsley"],
+  steps:["Heat the oil in a wide pan and soften the onion and pepper for 8 minutes.","Add garlic, cumin and paprika and stir for one minute.","Pour in the tomatoes, season, and simmer for 10 minutes until thick.","Make small wells, crack in the eggs, cover, and cook 6 to 8 minutes.","Scatter parsley on top and serve with warm bread."]},
+ {id:"s2",title:"Apple cake",cat:"Desserts",time:"1 hr 10 min",story:"Sample recipe. Add the story: who baked it first, and for which holiday?",
+  ing:["4 apples, peeled and sliced","3 eggs","1 cup sugar","½ cup oil","1½ cups flour","2 tsp baking powder","1 tsp cinnamon"],
+  steps:["Heat the oven to 175 °C and grease a round pan.","Whisk eggs and sugar until pale, then mix in the oil.","Fold in flour, baking powder and cinnamon.","Layer batter and apples in the pan, finishing with apples.","Bake 45 to 50 minutes until a skewer comes out clean."]},
+ {id:"s3",title:"Greek salad",cat:"Starters",time:"10 min",story:"Sample recipe. Add a travel memory: where did we first eat this?",
+  ing:["4 ripe tomatoes","1 cucumber","1 small red onion","A handful of olives","200 g feta","3 tbsp olive oil","1 tsp dried oregano"],
+  steps:["Cut tomatoes and cucumber into chunky pieces and slice the onion thinly.","Combine with olives in a bowl.","Lay the feta on top, drizzle with oil, and sprinkle oregano."]}
+];
+var CATS = ["Mains","Starters","Desserts","Holidays","Other"];
+var store = {mine:[],hidden:[]};
+try { var p = JSON.parse(localStorage.getItem("atlas") || "{}"); store.mine = p.mine || []; store.hidden = p.hidden || []; } catch (e) {}
+var st = {tab:"home", open:null, adding:false, q:"", cat:"All", cook:false, done:{}};
+var wl = null;
+
+function save(){ try { localStorage.setItem("atlas", JSON.stringify(store)); } catch (e) {} }
+function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
+function recipes(){ return SEED.concat(store.mine).filter(function(r){ return store.hidden.indexOf(r.id) < 0; }); }
+function dayIdx(){ var n = new Date(); return Math.floor((n - new Date(n.getFullYear(),0,0)) / 864e5); }
+
+function go(t){ st.tab = t; st.open = null; st.adding = false; releaseWake(); try { location.hash = t; } catch (e) {} render(); window.scrollTo(0,0); }
+function openR(id){ st.tab = "kitchen"; st.open = id; st.done = {}; render(); window.scrollTo(0,0); }
+function back(){ st.open = null; st.adding = false; releaseWake(); render(); }
+function releaseWake(){ st.cook = false; try { if (wl) { wl.release(); wl = null; } } catch (e) {} }
+async function toggleCook(){
+  st.cook = !st.cook;
+  try { if (st.cook && navigator.wakeLock) { wl = await navigator.wakeLock.request("screen"); } else if (wl) { await wl.release(); wl = null; } } catch (e) {}
+  render();
+}
+function tick(i){ st.done[i] = !st.done[i]; render(); }
+function setCat(c){ st.cat = c; render(); }
+function search(v){ st.q = v; fillList(); }
+function remove(id){ if (!confirm("Remove this recipe?")) return; store.mine = store.mine.filter(function(r){ return r.id !== id; }); if (id.charAt(0) === "s") store.hidden.push(id); save(); back(); }
+function saveNew(){
+  var t = document.getElementById("f-title").value.trim();
+  if (!t) { alert("Please give the recipe a name."); return; }
+  var lines = function(id){ return document.getElementById(id).value.split("\n").map(function(x){ return x.trim(); }).filter(Boolean); };
+  var r = {id:"u" + Date.now(), title:t, cat:document.getElementById("f-cat").value, time:document.getElementById("f-time").value.trim(),
+    story:document.getElementById("f-story").value.trim(), ing:lines("f-ing"), steps:lines("f-steps")};
+  store.mine.push(r); save(); st.adding = false; openR(r.id);
+}
+
+function home(){
+  var f = FACTS[dayIdx() % FACTS.length], rs = recipes(), r = rs.length ? rs[dayIdx() % rs.length] : null;
+  return '<div class="hero"><h1>Happy Birthday, ' + esc(NAME) + '!</h1><p class="mut">Your own atlas of recipes, puzzles and places. A little more will turn up here over time.</p></div>' +
+  '<div class="fact"><b>Did you know? (' + f[0] + ')</b>' + esc(f[1]) + '</div>' +
+  (r ? '<h2>Today’s recipe</h2><button class="card tap" onclick="openR(\'' + r.id + '\')"><h3>' + esc(r.title) + '</h3><span class="mut">' + esc(r.cat) + (r.time ? ', ' + esc(r.time) : '') + '</span></button>' : '') +
+  '<h2>Coming next</h2><div class="card"><p><b>Games:</b> trivia, crosswords and puzzles about history, art and geography.</p><p><b>Explore:</b> a map of places you have been and want to go.</p><p style="margin:0"><b>Family:</b> photos and messages from all of us.</p></div>';
+}
+
+function kitchen(){
+  if (st.adding) return form();
+  if (st.open) return detail();
+  var cats = ["All"].concat(CATS);
+  return '<div class="row"><h2 style="margin:0">Kitchen</h2><button class="btn" onclick="st.adding=true;render()">Add recipe</button></div>' +
+  '<input type="search" placeholder="Search recipes" aria-label="Search recipes" value="' + esc(st.q) + '" oninput="search(this.value)" style="margin-top:14px">' +
+  '<div class="chips">' + cats.map(function(c){ return '<button class="chip" aria-pressed="' + (st.cat === c) + '" onclick="setCat(\'' + c + '\')">' + c + '</button>'; }).join("") + '</div><div id="list"></div>';
+}
+function fillList(){
+  var el = document.getElementById("list"); if (!el) return;
+  var q = st.q.toLowerCase();
+  var rs = recipes().filter(function(r){ return (st.cat === "All" || r.cat === st.cat) && (r.title + " " + r.ing.join(" ")).toLowerCase().indexOf(q) >= 0; });
+  el.innerHTML = rs.length ? rs.map(function(r){
+    return '<button class="card tap" onclick="openR(\'' + r.id + '\')"><h3>' + esc(r.title) + '</h3><span class="tag">' + esc(r.cat) + '</span><span class="mut">' + esc(r.time || "") + '</span></button>';
+  }).join("") : '<p class="mut">No recipes found. Try another word, or add a new recipe.</p>';
+}
+function detail(){
+  var r = recipes().filter(function(x){ return x.id === st.open; })[0];
+  if (!r) { st.open = null; return kitchen(); }
+  return '<div class="' + (st.cook ? "cook" : "") + '"><button class="btn alt" onclick="back()">Back to recipes</button><h2 style="margin-top:18px">' + esc(r.title) + '</h2>' +
+  '<p><span class="tag">' + esc(r.cat) + '</span><span class="mut">' + esc(r.time || "") + '</span></p>' +
+  (r.story ? '<p class="story">' + esc(r.story) + '</p>' : '') +
+  '<h3 style="margin-bottom:6px">Ingredients</h3><ul class="ing">' + r.ing.map(function(x,i){ return '<li class="' + (st.done[i] ? "done" : "") + '" onclick="tick(' + i + ')">' + esc(x) + '</li>'; }).join("") + '</ul>' +
+  '<h3 style="margin-bottom:10px">Steps</h3><ol class="steps">' + r.steps.map(function(x){ return '<li>' + esc(x) + '</li>'; }).join("") + '</ol></div>' +
+  '<div class="row" style="flex-wrap:wrap"><button class="btn" onclick="toggleCook()">' + (st.cook ? "Exit cooking mode" : "Start cooking mode") + '</button><button class="btn warn" onclick="remove(\'' + r.id + '\')">Remove</button></div>' +
+  (st.cook ? '<p class="mut" style="margin-top:12px">The screen stays on while cooking mode is active.</p>' : '');
+}
+function form(){
+  return '<button class="btn alt" onclick="back()">Cancel</button><h2 style="margin-top:18px">New recipe</h2>' +
+  '<label for="f-title">Name</label><input id="f-title">' +
+  '<label for="f-cat">Category</label><select id="f-cat">' + CATS.map(function(c){ return '<option>' + c + '</option>'; }).join("") + '</select>' +
+  '<label for="f-time">Time (optional)</label><input id="f-time" placeholder="45 min">' +
+  '<label for="f-story">The story behind it</label><textarea id="f-story" rows="3" placeholder="Who made it first? When do we eat it?"></textarea>' +
+  '<label for="f-ing">Ingredients (one per line)</label><textarea id="f-ing" rows="6"></textarea>' +
+  '<label for="f-steps">Steps (one per line)</label><textarea id="f-steps" rows="6"></textarea>' +
+  '<button class="btn" onclick="saveNew()">Save recipe</button>';
+}
+function soon(t){
+  var m = {games:["🧩","Games","Trivia, crosswords and puzzles are the next section to be built."],explore:["🧭","Explore","A world map for pinning places you have visited, plus an art gallery."],family:["💌","Family","Photos, memories and birthday messages will live here."]}[t];
+  return '<div class="soon card"><div class="big">' + m[0] + '</div><h2>' + m[1] + '</h2><p class="mut">' + m[2] + '</p></div>';
+}
+function render(){
+  document.getElementById("view").innerHTML = st.tab === "home" ? home() : st.tab === "kitchen" ? kitchen() : soon(st.tab);
+  document.getElementById("nav").innerHTML = TABS.map(function(t){
+    return '<button onclick="go(\'' + t[0] + '\')"' + (st.tab === t[0] ? ' aria-current="page"' : '') + '><span>' + t[1] + '</span>' + t[2] + '</button>';
+  }).join("");
+  if (st.tab === "kitchen" && !st.open && !st.adding) fillList();
+}
+function fromHash(){ var h = (location.hash || "").slice(1); if (TABS.some(function(t){ return t[0] === h; })) { st.tab = h; st.open = null; st.adding = false; } }
+window.addEventListener("hashchange", function(){ fromHash(); render(); });
+fromHash(); render();
+</script>
+</body>
+</html>

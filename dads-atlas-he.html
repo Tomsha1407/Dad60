@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>האטלס של אבא</title>
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#e8ebde;--card:#f6f6ec;--ink:#14263a;--mut:#56677a;--acc:#1f5f6b;--gold:#a87a1c;--line:#c5cbb4;--on:#fff;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1824;--card:#16253a;--ink:#e9eadb;--mut:#9aabbd;--acc:#6fb7c2;--gold:#d9ad4f;--line:#2b3d55;--on:#0e1824;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0e1824;--card:#16253a;--ink:#e9eadb;--mut:#9aabbd;--acc:#6fb7c2;--gold:#d9ad4f;--line:#2b3d55;--on:#0e1824;color-scheme:dark}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:19px/1.65 "Frank Ruhl Libre","Times New Roman",serif;padding-bottom:92px;-webkit-text-size-adjust:100%}
+main{max-width:640px;margin:0 auto;padding:20px 18px}
+h1,h2,h3{font-family:"Frank Ruhl Libre","Times New Roman",serif;line-height:1.2;margin:0;font-weight:900}
+h1{font-size:2.6rem}
+h2{font-size:1.7rem;margin-bottom:12px}
+h3{font-size:1.3rem}
+p{margin:0 0 12px}
+.mut{color:var(--mut)}
+button{font:inherit;cursor:pointer;color:inherit}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.hero{padding:18px 0 22px;border-bottom:2px solid var(--ink);margin-bottom:22px}
+.hero p{margin:8px 0 0;font-size:1.1rem}
+.fact{border:2px dashed var(--acc);border-radius:6px;padding:16px 18px;background:var(--card);margin-bottom:20px}
+.fact b{color:var(--acc);font-size:1.2rem;display:block;margin-bottom:4px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:14px}
+.row{display:flex;gap:10px;align-items:center;justify-content:space-between}
+.tap{width:100%;text-align:start;display:block}
+.btn{background:var(--acc);color:var(--on);border:0;border-radius:8px;padding:12px 18px;font-weight:700;min-height:48px}
+.btn.alt{background:transparent;color:var(--ink);border:1.5px solid var(--ink)}
+.btn.warn{background:transparent;color:var(--mut);border:1px solid var(--line)}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:4px 0 12px}
+.chip{border:1.5px solid var(--line);background:var(--card);border-radius:99px;padding:8px 16px;white-space:nowrap;min-height:44px}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+input,select,textarea{width:100%;font:inherit;padding:12px;border:1.5px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);margin:4px 0 14px}
+label{font-weight:700;font-size:1rem}
+.tag{display:inline-block;font-size:.9rem;color:var(--acc);border:1px solid var(--acc);border-radius:99px;padding:0 10px;margin-inline-end:8px}
+.story{border-inline-start:4px solid var(--gold);padding-inline-start:14px;margin:14px 0}
+.ing{list-style:none;padding:0;margin:0 0 20px}
+.ing li{padding:10px 4px;border-bottom:1px solid var(--line);cursor:pointer}
+.ing li.done{text-decoration:line-through;color:var(--mut)}
+.steps{padding-inline-start:26px;margin:0 0 20px}
+.steps li{margin-bottom:14px}
+.cook{font-size:1.45rem;line-height:1.6}
+.cook h2{font-size:2.1rem}
+.soon{text-align:center;padding:40px 18px}
+.soon .big{font-size:3rem}
+nav{position:fixed;left:0;right:0;bottom:0;display:flex;background:var(--card);border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom,0px))}
+nav button{flex:1;background:none;border:0;padding:6px 0;font-size:.9rem;color:var(--mut);min-height:52px;display:flex;flex-direction:column;align-items:center;gap:2px}
+nav button span{font-size:1.4rem;line-height:1}
+nav button[aria-current="page"]{color:var(--acc);font-weight:700}
+</style>
+</head>
+<body>
+<main id="view"></main>
+<nav id="nav" aria-label="ניווט ראשי"></nav>
+<script>
+var NAME = "אבא";
+var ALL = "הכל";
+var TABS = [["home","🏠","בית"],["kitchen","🍳","מטבח"],["games","🧩","משחקים"],["explore","🧭","מסעות"],["family","💌","משפחה"]];
+var FACTS = [
+ ["אמנות","המונה ליזה נגנבה מהלובר ב-1911 וחזרה לפריז ב-1914."],
+ ["גאוגרפיה","רוסיה משתרעת על פני אחד-עשר אזורי זמן, יותר מכל מדינה אחרת."],
+ ["היסטוריה","אבן רוזטה, שהתגלתה ב-1799, עזרה לשמפוליון לפענח את ההירוגליפים המצריים ב-1822."],
+ ["טיולים","ונציה בנויה על יותר ממאה איים קטנים המחוברים זה לזה בגשרים."],
+ ["בישול","סחר התבלינים בימי הביניים הוביל מלחים אירופאים לחפש נתיבים ימיים לאסיה."],
+ ["אמנות","וינסנט ואן גוך מכר מעט מאוד ציורים בחייו."],
+ ["גאוגרפיה","איסטנבול שוכנת על שתי יבשות, אירופה ואסיה."]
+];
+var CATS = ["עיקריות","מנות פתיחה","קינוחים","חגים","אחר"];
+var SEED = [
+ {id:"s1",title:"שקשוקה",cat:"עיקריות",time:"30 דקות",story:"מתכון לדוגמה. החליפו בסיפור על המקום שממנו המנה הגיעה למשפחה שלנו.",
+  ing:["2 כפות שמן זית","בצל אחד קצוץ","פלפל אדום אחד פרוס","3 שיני שום קצוצות","כפית כמון","כפית פפריקה","קופסת עגבניות מרוסקות (400 גרם)","4 עד 5 ביצים","מלח, פלפל ופטרוזיליה טרייה"],
+  steps:["מחממים את השמן במחבת רחבה ומטגנים את הבצל והפלפל כ-8 דקות עד שהם מתרככים.","מוסיפים שום, כמון ופפריקה ומערבבים דקה.","שופכים את העגבניות, מתבלים במלח ומבשלים כ-10 דקות עד שהרוטב סמיך.","עושים גומחות ברוטב, שוברים לתוכן את הביצים, מכסים ומבשלים 6 עד 8 דקות.","מפזרים פטרוזיליה ומגישים עם לחם חם."]},
+ {id:"s2",title:"עוגת תפוחים",cat:"קינוחים",time:"שעה ו-10 דקות",story:"מתכון לדוגמה. הוסיפו את הסיפור: מי אפה אותה ראשון, ולאיזה חג?",
+  ing:["4 תפוחים, מקולפים ופרוסים","3 ביצים","כוס סוכר","חצי כוס שמן","כוס וחצי קמח","2 כפיות אבקת אפייה","כפית קינמון"],
+  steps:["מחממים תנור ל-175 מעלות ומשמנים תבנית עגולה.","מקציפים ביצים וסוכר עד שהתערובת בהירה ומוסיפים את השמן.","מקפלים פנימה קמח, אבקת אפייה וקינמון.","שכבות של בלילה ותפוחים בתבנית, ומסיימים בשכבת תפוחים.","אופים 45 עד 50 דקות, עד שקיסם יוצא יבש."]},
+ {id:"s3",title:"סלט יווני",cat:"מנות פתיחה",time:"10 דקות",story:"מתכון לדוגמה. הוסיפו זיכרון מטיול: איפה אכלנו אותו בפעם הראשונה?",
+  ing:["4 עגבניות בשלות","מלפפון אחד","בצל סגול קטן","חופן זיתים","200 גרם גבינת פטה","3 כפות שמן זית","כפית אורגנו יבש"],
+  steps:["חותכים עגבניות ומלפפון לקוביות גדולות ופורסים את הבצל דק.","מערבבים בקערה עם הזיתים.","מניחים מלמעלה את הפטה, מטפטפים שמן ומפזרים אורגנו."]}
+];
+var store = {mine:[],hidden:[]};
+try { var p = JSON.parse(localStorage.getItem("atlas_he") || "{}"); store.mine = p.mine || []; store.hidden = p.hidden || []; } catch (e) {}
+var st = {tab:"home", open:null, adding:false, q:"", cat:ALL, cook:false, done:{}};
+var wl = null;
+
+function save(){ try { localStorage.setItem("atlas_he", JSON.stringify(store)); } catch (e) {} }
+function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
+function recipes(){ return SEED.concat(store.mine).filter(function(r){ return store.hidden.indexOf(r.id) < 0; }); }
+function dayIdx(){ var n = new Date(); return Math.floor((n - new Date(n.getFullYear(),0,0)) / 864e5); }
+
+function go(t){ st.tab = t; st.open = null; st.adding = false; releaseWake(); try { location.hash = t; } catch (e) {} render(); window.scrollTo(0,0); }
+function openR(id){ st.tab = "kitchen"; st.open = id; st.done = {}; render(); window.scrollTo(0,0); }
+function back(){ st.open = null; st.adding = false; releaseWake(); render(); }
+function releaseWake(){ st.cook = false; try { if (wl) { wl.release(); wl = null; } } catch (e) {} }
+async function toggleCook(){
+  st.cook = !st.cook;
+  try { if (st.cook && navigator.wakeLock) { wl = await navigator.wakeLock.request("screen"); } else if (wl) { await wl.release(); wl = null; } } catch (e) {}
+  render();
+}
+function tick(i){ st.done[i] = !st.done[i]; render(); }
+function setCat(c){ st.cat = c; render(); }
+function search(v){ st.q = v; fillList(); }
+function remove(id){ if (!confirm("להסיר את המתכון?")) return; store.mine = store.mine.filter(function(r){ return r.id !== id; }); if (id.charAt(0) === "s") store.hidden.push(id); save(); back(); }
+function saveNew(){
+  var t = document.getElementById("f-title").value.trim();
+  if (!t) { alert("נא לתת למתכון שם."); return; }
+  var lines = function(id){ return document.getElementById(id).value.split("\n").map(function(x){ return x.trim(); }).filter(Boolean); };
+  var r = {id:"u" + Date.now(), title:t, cat:document.getElementById("f-cat").value, time:document.getElementById("f-time").value.trim(),
+    story:document.getElementById("f-story").value.trim(), ing:lines("f-ing"), steps:lines("f-steps")};
+  store.mine.push(r); save(); st.adding = false; openR(r.id);
+}
+
+function home(){
+  var f = FACTS[dayIdx() % FACTS.length], rs = recipes(), r = rs.length ? rs[dayIdx() % rs.length] : null;
+  return '<div class="hero"><h1>יום הולדת שמח, ' + esc(NAME) + '!</h1><p class="mut">האטלס האישי שלך: מתכונים, חידות ומקומות. עוד דברים יצטרפו עם הזמן.</p></div>' +
+  '<div class="fact"><b>הידעת? (' + f[0] + ')</b>' + esc(f[1]) + '</div>' +
+  (r ? '<h2>המתכון של היום</h2><button class="card tap" onclick="openR(\'' + r.id + '\')"><h3>' + esc(r.title) + '</h3><span class="mut">' + esc(r.cat) + (r.time ? ', ' + esc(r.time) : '') + '</span></button>' : '') +
+  '<h2>בקרוב</h2><div class="card"><p><b>משחקים:</b> טריוויה, תשבצים וחידות בהיסטוריה, באמנות ובגאוגרפיה.</p><p><b>מסעות:</b> מפה של המקומות שביקרת בהם ואלה שעוד תרצה לראות.</p><p style="margin:0"><b>משפחה:</b> תמונות והודעות מכולנו.</p></div>';
+}
+
+function kitchen(){
+  if (st.adding) return form();
+  if (st.open) return detail();
+  var cats = [ALL].concat(CATS);
+  return '<div class="row"><h2 style="margin:0">מטבח</h2><button class="btn" onclick="st.adding=true;render()">הוספת מתכון</button></div>' +
+  '<input type="search" placeholder="חיפוש מתכונים" aria-label="חיפוש מתכונים" value="' + esc(st.q) + '" oninput="search(this.value)" style="margin-top:14px">' +
+  '<div class="chips">' + cats.map(function(c){ return '<button class="chip" aria-pressed="' + (st.cat === c) + '" onclick="setCat(\'' + c + '\')">' + c + '</button>'; }).join("") + '</div><div id="list"></div>';
+}
+function fillList(){
+  var el = document.getElementById("list"); if (!el) return;
+  var q = st.q.toLowerCase();
+  var rs = recipes().filter(function(r){ return (st.cat === ALL || r.cat === st.cat) && (r.title + " " + r.ing.join(" ")).toLowerCase().indexOf(q) >= 0; });
+  el.innerHTML = rs.length ? rs.map(function(r){
+    return '<button class="card tap" onclick="openR(\'' + r.id + '\')"><h3>' + esc(r.title) + '</h3><span class="tag">' + esc(r.cat) + '</span><span class="mut">' + esc(r.time || "") + '</span></button>';
+  }).join("") : '<p class="mut">לא נמצאו מתכונים. נסו מילה אחרת או הוסיפו מתכון חדש.</p>';
+}
+function detail(){
+  var r = recipes().filter(function(x){ return x.id === st.open; })[0];
+  if (!r) { st.open = null; return kitchen(); }
+  return '<div class="' + (st.cook ? "cook" : "") + '"><button class="btn alt" onclick="back()">חזרה למתכונים</button><h2 style="margin-top:18px">' + esc(r.title) + '</h2>' +
+  '<p><span class="tag">' + esc(r.cat) + '</span><span class="mut">' + esc(r.time || "") + '</span></p>' +
+  (r.story ? '<p class="story">' + esc(r.story) + '</p>' : '') +
+  '<h3 style="margin-bottom:6px">מצרכים</h3><ul class="ing">' + r.ing.map(function(x,i){ return '<li class="' + (st.done[i] ? "done" : "") + '" onclick="tick(' + i + ')">' + esc(x) + '</li>'; }).join("") + '</ul>' +
+  '<h3 style="margin-bottom:10px">הכנה</h3><ol class="steps">' + r.steps.map(function(x){ return '<li>' + esc(x) + '</li>'; }).join("") + '</ol></div>' +
+  '<div class="row" style="flex-wrap:wrap"><button class="btn" onclick="toggleCook()">' + (st.cook ? "יציאה ממצב בישול" : "מצב בישול") + '</button><button class="btn warn" onclick="remove(\'' + r.id + '\')">הסרה</button></div>' +
+  (st.cook ? '<p class="mut" style="margin-top:12px">המסך נשאר דלוק בזמן מצב בישול.</p>' : '');
+}
+function form(){
+  return '<button class="btn alt" onclick="back()">ביטול</button><h2 style="margin-top:18px">מתכון חדש</h2>' +
+  '<label for="f-title">שם</label><input id="f-title">' +
+  '<label for="f-cat">קטגוריה</label><select id="f-cat">' + CATS.map(function(c){ return '<option>' + c + '</option>'; }).join("") + '</select>' +
+  '<label for="f-time">זמן (לא חובה)</label><input id="f-time" placeholder="45 דקות">' +
+  '<label for="f-story">הסיפור מאחורי המתכון</label><textarea id="f-story" rows="3" placeholder="מי הכין אותו ראשון? מתי אוכלים אותו?"></textarea>' +
+  '<label for="f-ing">מצרכים (אחד בכל שורה)</label><textarea id="f-ing" rows="6"></textarea>' +
+  '<label for="f-steps">שלבי הכנה (אחד בכל שורה)</label><textarea id="f-steps" rows="6"></textarea>' +
+  '<button class="btn" onclick="saveNew()">שמירת מתכון</button>';
+}
+function soon(t){
+  var m = {games:["🧩","משחקים","טריוויה, תשבצים וחידות הם החלק הבא שייבנה."],explore:["🧭","מסעות","מפת עולם לסימון מקומות שביקרת בהם, וגלריית אמנות."],family:["💌","משפחה","תמונות, זיכרונות וברכות יום הולדת יגיעו לכאן."]}[t];
+  return '<div class="soon card"><div class="big">' + m[0] + '</div><h2>' + m[1] + '</h2><p class="mut">' + m[2] + '</p></div>';
+}
+function render(){
+  document.getElementById("view").innerHTML = st.tab === "home" ? home() : st.tab === "kitchen" ? kitchen() : soon(st.tab);
+  document.getElementById("nav").innerHTML = TABS.map(function(t){
+    return '<button onclick="go(\'' + t[0] + '\')"' + (st.tab === t[0] ? ' aria-current="page"' : '') + '><span>' + t[1] + '</span>' + t[2] + '</button>';
+  }).join("");
+  if (st.tab === "kitchen" && !st.open && !st.adding) fillList();
+}
+function fromHash(){ var h = (location.hash || "").slice(1); if (TABS.some(function(t){ return t[0] === h; })) { st.tab = h; st.open = null; st.adding = false; } }
+window.addEventListener("hashchange", function(){ fromHash(); render(); });
+fromHash(); render();
+</script>
+</body>
+</html>
