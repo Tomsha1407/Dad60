@@ -49,6 +49,13 @@ label{font-weight:700;font-size:1rem}
 .cook h2{font-size:2.1rem}
 .soon{text-align:center;padding:40px 18px}
 .soon .big{font-size:3rem}
+.rimg{width:100%;aspect-ratio:16/10;object-fit:cover;border-radius:12px;display:block}
+.timg{width:76px;height:76px;object-fit:cover;border-radius:10px;flex:none;display:block}
+.ph{display:grid;place-items:center;background:linear-gradient(135deg,var(--acc),var(--gold));font-size:2.4rem;color:var(--on)}
+.rimg.ph{font-size:4rem}
+label.btn{display:inline-flex;align-items:center;cursor:pointer}
+.bar{display:block;height:8px;background:var(--line);border-radius:99px;overflow:hidden}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--acc),var(--gold))}
 .hrow{display:flex;gap:6px}
 .hd{flex:1;min-width:0;border:1.5px solid var(--line);background:var(--card);border-radius:10px;padding:6px 0;display:flex;flex-direction:column;align-items:center;min-height:56px}
 .hd.on{background:var(--acc);color:var(--on);border-color:var(--acc)}
@@ -99,8 +106,8 @@ var SEED = [
   ing:["4 עגבניות בשלות","מלפפון אחד","בצל סגול קטן","חופן זיתים","200 גרם גבינת פטה","3 כפות שמן זית","כפית אורגנו יבש"],
   steps:["חותכים עגבניות ומלפפון לקוביות גדולות ופורסים את הבצל דק.","מערבבים בקערה עם הזיתים.","מניחים מלמעלה את הפטה, מטפטפים שמן ומפזרים אורגנו."]}
 ];
-var store = {mine:[],hidden:[]};
-try { var p = JSON.parse(localStorage.getItem("atlas_he") || "{}"); store.mine = p.mine || []; store.hidden = p.hidden || []; } catch (e) {}
+var store = {mine:[],hidden:[],imgs:{}};
+try { var p = JSON.parse(localStorage.getItem("atlas_he") || "{}"); store.mine = p.mine || []; store.hidden = p.hidden || []; store.imgs = p.imgs || {}; } catch (e) {}
 var st = {tab:"home", open:null, adding:false, q:"", cat:ALL, cook:false, done:{}};
 var wl = null;
 
@@ -115,7 +122,7 @@ function dayIdx(){ var n = new Date(); return Math.floor((n - new Date(n.getFull
 
 function go(t){ br.ex = null; st.tab = t; st.open = null; st.adding = false; releaseWake(); render(); window.scrollTo(0,0); }
 function openR(id){ st.tab = "kitchen"; st.open = id; st.done = {}; render(); window.scrollTo(0,0); }
-function back(){ st.open = null; st.adding = false; releaseWake(); render(); }
+function back(){ pendImg = ""; st.open = null; st.adding = false; releaseWake(); render(); }
 function releaseWake(){ brStop(); st.cook = false; try { if (wl) { wl.release(); wl = null; } } catch (e) {} }
 async function toggleCook(){
   st.cook = !st.cook;
@@ -125,16 +132,30 @@ async function toggleCook(){
 function tick(i){ st.done[i] = !st.done[i]; render(); }
 function setCat(c){ st.cat = c; render(); }
 function search(v){ st.q = v; fillList(); }
-function remove(id){ if (!confirm("להסיר את המתכון?")) return; store.mine = store.mine.filter(function(r){ return r.id !== id; }); if (isShared(id)) store.hidden.push(id); save(); back(); }
+function remove(id){ if (!confirm("להסיר את המתכון?")) return; store.mine = store.mine.filter(function(r){ return r.id !== id; }); delete store.imgs[id]; if (isShared(id)) store.hidden.push(id); save(); back(); }
 function shareR(id){
   var r = recipes().filter(function(x){ return x.id === id; })[0]; if (!r) return;
-  var txt = JSON.stringify(r, null, 2);
-  if (navigator.share) { navigator.share({title: r.title, text: txt}).catch(function(){}); return; }
+  var o = JSON.parse(JSON.stringify(r)); delete o.img; var txt = JSON.stringify(o, null, 2), im = imgOf(r), data = {title: r.title, text: txt};
+  if (im.indexOf("data:") === 0) { try { var f = dataToFile(im); if (navigator.canShare && navigator.canShare({files:[f]})) data.files = [f]; } catch (e) {} }
+  if (navigator.share) { navigator.share(data).catch(function(){}); return; }
   try { navigator.clipboard.writeText(txt).then(function(){ alert("המתכון הועתק. הדביקו אותו בהודעה ושלחו."); }, function(){ prompt("העתיקו את הטקסט:", txt); }); } catch (e) { prompt("העתיקו את הטקסט:", txt); }
 }
 function loadShared(){
   try { fetch("recipes.json", {cache:"no-cache"}).then(function(r){ if (!r.ok) throw 0; return r.json(); }).then(function(a){ if (Array.isArray(a) && a.length) { SEED = a; if (!st.adding) render(); } }).catch(function(){}); } catch (e) {}
 }
+var CATEMO = {"עיקריות":"🍽️","מנות פתיחה":"🥗","קינוחים":"🍰","חגים":"🕎","אחר":"🍴"};
+var pendImg = "";
+function imgOf(r){ return store.imgs[r.id] || r.img || ""; }
+function thumb(r, cls){ var s = imgOf(r); return s ? '<img class="' + cls + '" src="' + esc(s) + '" alt="' + esc(r.title) + '">' : '<div class="' + cls + ' ph" aria-hidden="true">' + (CATEMO[r.cat] || "🍴") + '</div>'; }
+function resizeImg(file, cb){
+  var fr = new FileReader();
+  fr.onload = function(){ var im = new Image(); im.onload = function(){ var k = Math.min(1, 900 / Math.max(im.width, im.height)), c = document.createElement("canvas"); c.width = Math.round(im.width * k); c.height = Math.round(im.height * k); c.getContext("2d").drawImage(im, 0, 0, c.width, c.height); cb(c.toDataURL("image/jpeg", 0.72)); }; im.onerror = function(){ alert("לא הצלחתי לקרוא את התמונה."); }; im.src = fr.result; };
+  fr.readAsDataURL(file);
+}
+function dataToFile(du){ var p = du.split(","), bin = atob(p[1]), a = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) a[i] = bin.charCodeAt(i); return new File([a], "recipe.jpg", {type:"image/jpeg"}); }
+function pendPick(inp){ var f = inp.files[0]; if (!f) return; resizeImg(f, function(d){ pendImg = d; var pv = document.getElementById("pv"); if (pv) { pv.src = d; pv.style.display = "block"; } }); }
+function setImg(inp, id){ var f = inp.files[0]; if (!f) return; resizeImg(f, function(d){ store.imgs[id] = d; try { localStorage.setItem("atlas_he", JSON.stringify(store)); } catch (e) { delete store.imgs[id]; alert("אין מספיק מקום בטלפון לשמירת התמונה."); return; } render(); }); }
+function delImg(id){ delete store.imgs[id]; save(); render(); }
 function fixLink(v){
   v = v.trim(); if (!v) return "";
   if (v.indexOf("://") < 0) v = "https://" + v;
@@ -155,7 +176,7 @@ function saveNew(){
   var lines = function(id){ return document.getElementById(id).value.split("\n").map(function(x){ return x.trim(); }).filter(Boolean); };
   var r = {id:"u" + Date.now(), title:t, cat:document.getElementById("f-cat").value, time:document.getElementById("f-time").value.trim(),
     story:document.getElementById("f-story").value.trim(), ing:lines("f-ing"), steps:lines("f-steps"), link:link};
-  store.mine.push(r); save(); st.adding = false; openR(r.id);
+  if (pendImg) store.imgs[r.id] = pendImg; pendImg = ""; store.mine.push(r); save(); st.adding = false; openR(r.id);
 }
 
 function home(){
@@ -179,18 +200,18 @@ function fillList(){
   var q = st.q.toLowerCase();
   var rs = recipes().filter(function(r){ return (st.cat === ALL || r.cat === st.cat) && (r.title + " " + r.ing.join(" ")).toLowerCase().indexOf(q) >= 0; });
   el.innerHTML = rs.length ? rs.map(function(r){
-    return '<button class="card tap" onclick="openR(\'' + r.id + '\')"><h3>' + esc(r.title) + '</h3><span class="tag">' + esc(r.cat) + '</span><span class="mut">' + esc(r.time || "") + '</span>' + (r.link ? ' <span class="mut" aria-label="יש קישור">🔗</span>' : '') + '</button>';
+    return '<button class="card tap" style="display:flex;gap:14px;align-items:center" onclick="openR(\'' + r.id + '\')">' + thumb(r, "timg") + '<span style="flex:1;min-width:0"><h3>' + esc(r.title) + '</h3><span class="tag">' + esc(r.cat) + '</span><span class="mut">' + esc(r.time || "") + '</span>' + (r.link ? ' <span class="mut" aria-label="יש קישור">🔗</span>' : '') + '</span></button>';
   }).join("") : '<p class="mut">לא נמצאו מתכונים. נסו מילה אחרת או הוסיפו מתכון חדש.</p>';
 }
 function detail(){
   var r = recipes().filter(function(x){ return x.id === st.open; })[0];
   if (!r) { st.open = null; return kitchen(); }
-  return '<div class="' + (st.cook ? "cook" : "") + '"><button class="btn alt" onclick="back()">חזרה למתכונים</button><h2 style="margin-top:18px">' + esc(r.title) + '</h2>' +
+  return '<div class="' + (st.cook ? "cook" : "") + '"><button class="btn alt" onclick="back()">חזרה למתכונים</button><div style="margin-top:14px">' + thumb(r, "rimg") + '</div><h2 style="margin-top:18px">' + esc(r.title) + '</h2>' +
   '<p><span class="tag">' + esc(r.cat) + '</span><span class="mut">' + esc(r.time || "") + '</span></p>' +
   (r.story ? '<p class="story">' + esc(r.story) + '</p>' : '') + linkBtn(r) +
   (r.ing.length ? '<h3 style="margin-bottom:6px">מצרכים</h3>' : '') + '<ul class="ing">' + r.ing.map(function(x,i){ return '<li class="' + (st.done[i] ? "done" : "") + '" onclick="tick(' + i + ')">' + esc(x) + '</li>'; }).join("") + '</ul>' +
   (r.steps.length ? '<h3 style="margin-bottom:10px">הכנה</h3>' : '') + '<ol class="steps">' + r.steps.map(function(x){ return '<li>' + esc(x) + '</li>'; }).join("") + '</ol></div>' +
-  '<div class="row" style="flex-wrap:wrap"><button class="btn" onclick="toggleCook()">' + (st.cook ? "יציאה ממצב בישול" : "מצב בישול") + '</button>' + (isShared(r.id) ? '' : '<button class="btn alt" onclick="shareR(\'' + r.id + '\')">שליחה לשמירה באפליקציה</button>') + '<button class="btn warn" onclick="remove(\'' + r.id + '\')">הסרה</button></div>' +
+  '<div class="row" style="flex-wrap:wrap;margin-bottom:12px"><label class="btn alt">' + (imgOf(r) ? 'החלפת תמונה' : 'הוספת תמונה') + '<input type="file" accept="image/*" hidden onchange="setImg(this,\'' + r.id + '\')"></label>' + (store.imgs[r.id] ? '<button class="btn warn" onclick="delImg(\'' + r.id + '\')">הסרת תמונה</button>' : '') + '</div><div class="row" style="flex-wrap:wrap"><button class="btn" onclick="toggleCook()">' + (st.cook ? "יציאה ממצב בישול" : "מצב בישול") + '</button>' + (isShared(r.id) ? '' : '<button class="btn alt" onclick="shareR(\'' + r.id + '\')">שליחה לשמירה באפליקציה</button>') + '<button class="btn warn" onclick="remove(\'' + r.id + '\')">הסרה</button></div>' +
   (st.cook ? '<p class="mut" style="margin-top:12px">המסך נשאר דלוק בזמן מצב בישול.</p>' : '');
 }
 function form(){
@@ -201,6 +222,7 @@ function form(){
   '<label for="f-story">הסיפור מאחורי המתכון</label><textarea id="f-story" rows="3" placeholder="מי הכין אותו ראשון? מתי אוכלים אותו?"></textarea>' +
   '<label for="f-ing">מצרכים (אחד בכל שורה)</label><textarea id="f-ing" rows="6"></textarea>' +
   '<label for="f-steps">שלבי הכנה (אחד בכל שורה)</label><textarea id="f-steps" rows="6"></textarea>' +
+  '<label for="f-img">תמונה (לא חובה)</label><input id="f-img" type="file" accept="image/*" onchange="pendPick(this)"><img id="pv" class="rimg" alt="" style="display:none;margin-bottom:14px">' +
   '<label for="f-link">קישור למתכון (יוטיוב או אתר, לא חובה)</label><input id="f-link" type="url" inputmode="url" dir="ltr" placeholder="https://www.youtube.com/..." style="text-align:left">' +
   '<button class="btn" onclick="saveNew()">שמירת מתכון</button>';
 }
@@ -247,7 +269,7 @@ function breathe(){
 }
 var DAYS = ["א","ב","ג","ד","ה","ו","ש"];
 var hs = {sub:"breathe", open:null, add:false};
-var HB = {habits:[{id:"h1",name:"ספורט",emoji:"🏃",time:""},{id:"h2",name:"אוכל בריא",emoji:"🥗",time:""},{id:"h3",name:"שתיית מים",emoji:"💧",time:""}], log:{}};
+var HB = {habits:[{id:"h1",name:"ספורט",emoji:"🏃",time:"",goal:3},{id:"h2",name:"אוכל בריא",emoji:"🥗",time:""},{id:"h3",name:"שתיית מים",emoji:"💧",time:""}], log:{}};
 try { var hp = JSON.parse(localStorage.getItem("atlas_habits_he") || "null"); if (hp && hp.habits) HB = hp; } catch (e) {}
 function hsave(){ try { localStorage.setItem("atlas_habits_he", JSON.stringify(HB)); } catch (e) {} }
 function pad(n){ return (n < 10 ? "0" : "") + n; }
@@ -261,6 +283,25 @@ function bestStreak(h){
   ks.forEach(function(k){ var p = k.split("-"), d = new Date(+p[0], +p[1] - 1, +p[2]); if (prev && dk(addDays(prev, 1)) === k) run++; else run = 1; if (run > best) best = run; prev = d; });
   return best;
 }
+function goalOf(h){ return h.goal || 7; }
+function goalTxt(h){ var g = goalOf(h); return g === 7 ? "כל יום" : g === 1 ? "פעם בשבוע" : g + " פעמים בשבוע"; }
+function goalOpts(cur){ return [7,6,5,4,3,2,1].map(function(g){ return '<option value="' + g + '"' + (g === cur ? ' selected' : '') + '>' + (g === 7 ? "כל יום" : g === 1 ? "פעם בשבוע" : g + " פעמים בשבוע") + '</option>'; }).join(""); }
+function weekCount(id, start){ var n = 0; for (var i = 0; i < 7; i++) { if (isDone(id, dk(addDays(start, i)))) n++; } return n; }
+function wStreak(h){
+  var g = goalOf(h), now = new Date(), ws = addDays(now, -now.getDay());
+  if (weekCount(h.id, ws) < g) ws = addDays(ws, -7);
+  var n = 0; while (weekCount(h.id, ws) >= g) { n++; ws = addDays(ws, -7); } return n;
+}
+function wBest(h){
+  var ks = Object.keys(HB.log[h.id] || {}).sort(); if (!ks.length) return 0;
+  var p = ks[0].split("-"), ws = new Date(+p[0], +p[1] - 1, +p[2]); ws = addDays(ws, -ws.getDay());
+  var now = new Date(), end = addDays(now, -now.getDay()), g = goalOf(h), best = 0, run = 0;
+  while (ws <= end) { if (weekCount(h.id, ws) >= g) { run++; if (run > best) best = run; } else run = 0; ws = addDays(ws, 7); }
+  return best;
+}
+function curStreak(h){ return goalOf(h) === 7 ? streak(h.id) : wStreak(h); }
+function bestS(h){ return goalOf(h) === 7 ? bestStreak(h.id) : wBest(h); }
+function unit(h, n){ if (goalOf(h) === 7) return n === 1 ? "יום אחד" : n + " ימים"; return n === 1 ? "שבוע אחד" : n === 2 ? "שבועיים" : n + " שבועות"; }
 function hSub(s){ hs.sub = s; hs.open = null; hs.add = false; render(); }
 function hOpen(id){ hs.open = id; render(); window.scrollTo(0,0); }
 function hBack(){ hs.open = null; render(); }
@@ -290,8 +331,8 @@ function hCard(h){
     var d = addDays(t, -i), k = dk(d), on = isDone(h.id, k); if (on) wk++;
     cells += '<button class="hd' + (on ? ' on' : '') + '" aria-pressed="' + on + '" aria-label="' + DAYS[d.getDay()] + ' ' + d.getDate() + '" onclick="hToggle(\'' + h.id + '\',\'' + k + '\')"><small>' + DAYS[d.getDay()] + '</small><b>' + (on ? '✓' : d.getDate()) + '</b></button>';
   }
-  var done = isDone(h.id, tk), s = streak(h.id), sx = s === 1 ? "יום אחד" : s + " ימים";
-  return '<div class="card"><button class="tap" style="background:none;border:0;padding:0;margin-bottom:10px" onclick="hOpen(\'' + h.id + '\')"><h3>' + h.emoji + ' ' + esc(h.name) + '</h3><span class="mut">' + (s ? '🔥 רצף של ' + sx + ' · ' : '') + wk + ' מתוך 7 השבוע' + (h.time ? ' · ⏰ ' + h.time : '') + '</span></button><div class="hrow">' + cells + '</div>' +
+  var done = isDone(h.id, tk), s = curStreak(h), sx = unit(h, s), g = goalOf(h), wc = weekCount(h.id, addDays(t, -t.getDay())), pct = Math.min(100, Math.round(wc / g * 100));
+  return '<div class="card"><button class="tap" style="background:none;border:0;padding:0;margin-bottom:10px" onclick="hOpen(\'' + h.id + '\')"><h3>' + h.emoji + ' ' + esc(h.name) + '</h3><span class="mut">' + 'יעד: ' + goalTxt(h) + (h.time ? ' · ⏰ ' + h.time : '') + '</span><br><span class="mut">' + (s ? '🔥 רצף: ' + sx + ' · ' : '') + 'השבוע: ' + wc + ' מתוך ' + g + (wc >= g ? ' ✓' : '') + '</span><span class="bar" style="margin-top:8px"><i style="width:' + pct + '%"></i></span></button><div class="hrow">' + cells + '</div>' +
     '<div style="margin-top:12px"><button class="btn' + (done ? ' alt' : '') + '" onclick="hToggle(\'' + h.id + '\',\'' + tk + '\')">' + (done ? '✓ בוצע היום (לחיצה לביטול)' : 'סימנתי להיום') + '</button></div></div>';
 }
 function hDetail(h){
@@ -300,21 +341,21 @@ function hDetail(h){
   for (var i = 0; i < 35; i++) { var d = addDays(start, i), k = dk(d); grid += '<div class="gc' + (isDone(h.id, k) ? ' on' : '') + (k > tk ? ' fut' : '') + '" title="' + k + '"></div>'; }
   for (var j = 0; j < 30; j++) { if (isDone(h.id, dk(addDays(t, -j)))) l30++; }
   return '<button class="btn alt" onclick="hBack()">חזרה להרגלים</button><h2 style="margin-top:18px">' + h.emoji + ' ' + esc(h.name) + '</h2>' +
-    '<div class="card"><p style="margin:0"><b>רצף נוכחי:</b> ' + streak(h.id) + ' ימים<br><b>הרצף הארוך ביותר:</b> ' + bestStreak(h.id) + ' ימים<br><b>סך הכול ימים שבוצעו:</b> ' + total + '<br><b>ב-30 הימים האחרונים:</b> ' + l30 + ' מתוך 30 (' + Math.round(l30 / 30 * 100) + '%)</p></div>' +
+    '<div class="card"><p style="margin:0"><b>יעד:</b> ' + goalTxt(h) + '<br><b>רצף נוכחי:</b> ' + unit(h, curStreak(h)) + '<br><b>הרצף הארוך ביותר:</b> ' + unit(h, bestS(h)) + '<br><b>סך הכול ימים שבוצעו:</b> ' + total + '<br><b>ב-30 הימים האחרונים:</b> ' + l30 + ' מתוך 30 (' + Math.round(l30 / 30 * 100) + '%)</p></div>' +
     '<h3 style="margin-bottom:6px">5 השבועות האחרונים</h3><div class="gcs">' + heads + grid + '</div>' +
-    '<div class="card"><label for="h-time">שעת תזכורת</label><input id="h-time" type="time" value="' + (h.time || "") + '"><div class="row" style="flex-wrap:wrap"><button class="btn" onclick="hSaveTime(\'' + h.id + '\')">שמירת השעה</button><button class="btn alt" onclick="hIcs(\'' + h.id + '\')">הוספה ליומן של הטלפון</button></div>' +
+    '<div class="card"><label for="h-goal">יעד</label><select id="h-goal">' + goalOpts(goalOf(h)) + '</select><label for="h-time">שעת תזכורת</label><input id="h-time" type="time" value="' + (h.time || "") + '"><div class="row" style="flex-wrap:wrap"><button class="btn" onclick="hSaveTime(\'' + h.id + '\')">שמירה</button><button class="btn alt" onclick="hIcs(\'' + h.id + '\')">הוספה ליומן של הטלפון</button></div>' +
     '<p class="mut" style="font-size:.95rem;margin:12px 0 0">התזכורת באפליקציה מופיעה כשפותחים אותה אחרי השעה שנבחרה. כדי לקבל התראה גם כשהאפליקציה סגורה, צריך להוסיף אותה ליומן.</p></div>' +
     '<button class="btn warn" onclick="hDel(\'' + h.id + '\')">מחיקת ההרגל</button>';
 }
-function hSaveTime(id){ var v = document.getElementById("h-time").value; HB.habits.forEach(function(h){ if (h.id === id) h.time = v; }); hsave(); alert("נשמר."); render(); }
+function hSaveTime(id){ var v = document.getElementById("h-time").value, g = +document.getElementById("h-goal").value; HB.habits.forEach(function(h){ if (h.id === id) { h.time = v; h.goal = g; } }); hsave(); alert("נשמר."); render(); }
 function hDel(id){ if (!confirm("למחוק את ההרגל ואת כל ההיסטוריה שלו?")) return; HB.habits = HB.habits.filter(function(h){ return h.id !== id; }); delete HB.log[id]; hsave(); hs.open = null; render(); }
 function hForm(){
   return '<button class="btn alt" onclick="hs.add=false;render()">ביטול</button><h2 style="margin-top:18px">הרגל חדש</h2><label for="hn">שם ההרגל</label><input id="hn" placeholder="למשל: הליכה של חצי שעה"><label for="he">סמל</label><select id="he">' +
-    ["🏃","🥗","💧","🚶","🧘","😴","📖","💊","🎯"].map(function(e){ return '<option>' + e + '</option>'; }).join("") + '</select><label for="ht">שעת תזכורת (לא חובה)</label><input id="ht" type="time"><button class="btn" onclick="hSaveNew()">שמירה</button>';
+    ["🏃","🥗","💧","🚶","🧘","😴","📖","💊","🎯"].map(function(e){ return '<option>' + e + '</option>'; }).join("") + '</select><label for="hg">יעד</label><select id="hg">' + goalOpts(7) + '</select><label for="ht">שעת תזכורת (לא חובה)</label><input id="ht" type="time"><button class="btn" onclick="hSaveNew()">שמירה</button>';
 }
 function hSaveNew(){
   var n = document.getElementById("hn").value.trim(); if (!n) { alert("נא לתת להרגל שם."); return; }
-  HB.habits.push({id:"h" + Date.now(), name:n, emoji:document.getElementById("he").value, time:document.getElementById("ht").value}); hsave(); hs.add = false; render();
+  HB.habits.push({id:"h" + Date.now(), name:n, emoji:document.getElementById("he").value, time:document.getElementById("ht").value, goal:+document.getElementById("hg").value}); hsave(); hs.add = false; render();
 }
 function hIcs(id){
   var h = HB.habits.filter(function(x){ return x.id === id; })[0];
